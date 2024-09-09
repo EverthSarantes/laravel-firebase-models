@@ -1,0 +1,30 @@
+{
+    "name": "everth/laravel-firebase-models",
+    "type": "library",
+    "require": {
+        "laravel/framework": "^11.0",
+        "kreait/firebase-php": "^7.14"
+    },
+    "license": "mit",
+    "autoload": {
+        "psr-4": {
+            "Firebase\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Firebase\\Providers\\FirebaseServiceProvider"
+            ],
+            "commands": [
+                "Firebase\\Console\\Commands\\MakeFirebaseModel"
+            ]
+        }
+    },  
+    "authors": [
+        {
+            "name": "Everth Sarantes",
+            "email": "everthleonardosaran@gmail.com"
+        }
+    ]
+}
