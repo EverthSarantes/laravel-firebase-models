@@ -16,7 +16,7 @@ Here’s an updated version of the `README.md` with your requests:
 In your Laravel project directory, run the following command to install the package:
 
 ```bash
-composer require everth/laravel-firebase-models --dev-main
+composer require everth/laravel-firebase-models dev-main
 ```
 
 ### 2. Set Firebase Credentials
