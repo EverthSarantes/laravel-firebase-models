@@ -4,7 +4,7 @@ namespace Firebase\Auth\Guards;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
-use App\Models\Firebase\User;
+use Firebase\Auth\Models\User;
 use Firebase\Auth\Providers\FirebaseUserProvider;
 
 class FirebaseGuard implements Guard

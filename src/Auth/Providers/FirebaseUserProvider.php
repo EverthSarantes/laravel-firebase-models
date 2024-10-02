@@ -5,7 +5,7 @@ namespace Firebase\Auth\Providers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
-use App\Models\Firebase\User;
+use Firebase\Auth\Models\User;
 
 
 class FirebaseUserProvider implements UserProvider
