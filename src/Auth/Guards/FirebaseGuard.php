@@ -5,6 +5,7 @@ namespace Firebase\Auth\Guards;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use App\Models\Firebase\User;
+use Firebase\Auth\Providers\FirebaseUserProvider;
 
 class FirebaseGuard implements Guard
 {
@@ -79,5 +80,10 @@ class FirebaseGuard implements Guard
     {
         $this->user = null;
         session()->forget('firebase_user_id');
+    }
+
+    public function getProvider()
+    {
+        return new FirebaseUserProvider();
     }
 }
