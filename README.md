@@ -1,4 +1,3 @@
-Here’s an updated version of the `README.md` with your requests:
 # Laravel Firebase Models
 
 `Laravel Firebase Models` is a package that allows you to seamlessly interact with Firebase Realtime Database in a Laravel project, using Eloquent-like models. This package abstracts the Firebase API into an intuitive interface for creating, reading, updating, and deleting records, along with relations similar to the ones in Laravel's ORM.
@@ -8,6 +7,7 @@ Here’s an updated version of the `README.md` with your requests:
 - CRUD operations (Create, Read, Update, Delete) via Firebase.
 - Simple relationships like `belongsToOne` and `hasMany` for handling related data.
 - Command to generate Firebase models quickly.
+- Firebase authentication with session management.
 
 ## Installation
 
@@ -248,6 +248,123 @@ $orders = $user->orders();
     }
   }
 }
+```
+
+### Authentication
+
+To enable Firebase authentication, you need to set the AUTH_GUARD in your .env file:
+
+```.env
+AUTH_GUARD=firebase
+```
+
+Next, create a model User that implements the Authenticatable interface and define your guard in config/auth.php.
+
+#### Example User Model
+
+```php
+namespace App\Models\Firebase;
+
+use Firebase\Models\FirebaseModel;
+use Illuminate\Contracts\Auth\Authenticatable;
+
+class User extends FirebaseModel implements Authenticatable
+{
+    protected $collection = 'users';
+
+    //Model Atributes
+    // username
+    // password
+
+    public function getAuthIdentifierName()
+    {
+        return 'id';
+    }
+
+    public function getAuthIdentifier()
+    {
+        return $this->attributes['id'];
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->attributes['password'];
+    }
+
+    public function getRememberToken()
+    {
+        return $this->attributes['remember_token'] ?? null;
+    }
+
+    public function setRememberToken($value)
+    {
+        $this->attributes['remember_token'] = $value;
+    }
+
+    public function getRememberTokenName()
+    {
+        return 'remember_token';
+    }
+
+    public function getAuthPasswordName()
+    {
+        return 'password';
+    }
+}
+```
+
+#### Define the Auth Guard
+In your config/auth.php, add the following to define your firebase guard:
+
+```php
+'guards' => [
+    'firebase' => [
+        'driver' => 'firebase',
+        'provider' => 'firebase',
+    ],
+],
+    
+'providers' => [
+    'firebase' => [
+        'driver' => 'firebase',
+        'model' => App\Models\Firebase\User::class,
+    ],
+],
+```
+
+### Authentication Routes
+
+#### Login Route
+
+```php
+Route::get('login/{username}/{password}', function ($username, $password, Request $request) {
+    if (Auth::guard('firebase')->attempt(['username' => $username, 'password' => $password])) {
+        $request->session()->regenerate(); // Regenerate the session
+        return 'True';
+    }
+    return 'False';
+})->name('login');
+```
+
+#### Logout Route
+To log users out, you can define a logout route:
+
+```php
+Route::get('logout', function (Request $request) {
+    Auth::guard('firebase')->logout();
+    $request->session()->invalidate(); // Invalidate the session
+    $request->session()->regenerateToken(); // Regenerate the token
+    return 'Logout';
+})->name('logout');
+```
+
+#### Check Authentication
+To check if a user is authenticated:
+
+```php
+Route::get('check', function (Request $request) {
+    return Auth::guard('firebase')->user();
+})->middleware('auth:firebase');
 ```
 
 ### License
