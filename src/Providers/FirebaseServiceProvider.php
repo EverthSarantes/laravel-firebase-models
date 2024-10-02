@@ -4,6 +4,9 @@ namespace Firebase\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Firebase\Console\Commands\MakeFirebaseModel;
+use Firebase\Auth\Guards\FirebaseGuard;
+use Firebase\Auth\Providers\FirebaseUserProvider;
+use Illuminate\Support\Facades\Auth;
 
 class FirebaseServiceProvider extends ServiceProvider
 {
@@ -31,8 +34,12 @@ class FirebaseServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // $this->publishes([
-        //     __DIR__ . '/../Config/firebase.php' => config_path('firebase.php'),
-        // ], 'firebase-config');
+        Auth::extend('firebase', function ($app, $name, array $config) {
+            return new FirebaseGuard(Auth::createUserProvider($config['provider']));
+        });
+
+        Auth::provider('firebase', function ($app, array $config) {
+            return new FirebaseUserProvider();
+        });
     }
 }
