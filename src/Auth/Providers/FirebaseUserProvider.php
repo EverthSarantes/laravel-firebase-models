@@ -2,6 +2,7 @@
 
 namespace Firebase\Auth\Providers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use App\Models\Firebase\User;
@@ -26,6 +27,21 @@ class FirebaseUserProvider implements UserProvider
 
     public function retrieveByToken($identifier, $token)
     {
+        $user = User::find($identifier);
+
+        if ($user) {
+            $hashedToken = hash('sha256', $token);
+            $tokenExists = DB::table('personal_access_tokens')
+                ->where('tokenable_type', User::class)
+                ->where('tokenable_id', $user->id)
+                ->where('token', $hashedToken)
+                ->exists();
+
+            if ($tokenExists) {
+                return $user;
+            }
+        }
+
         return null;
     }
 
