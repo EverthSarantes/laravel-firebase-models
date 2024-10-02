@@ -258,60 +258,7 @@ To enable Firebase authentication, you need to set the AUTH_GUARD in your .env f
 AUTH_GUARD=firebase
 ```
 
-Next, create a model User that implements the Authenticatable interface and define your guard in config/auth.php.
-
-#### Example User Model
-
-```php
-namespace App\Models\Firebase;
-
-use Firebase\Models\FirebaseModel;
-use Illuminate\Contracts\Auth\Authenticatable;
-
-class User extends FirebaseModel implements Authenticatable
-{
-    protected $collection = 'users';
-
-    //Model Atributes
-    // username
-    // password
-
-    public function getAuthIdentifierName()
-    {
-        return 'id';
-    }
-
-    public function getAuthIdentifier()
-    {
-        return $this->attributes['id'];
-    }
-
-    public function getAuthPassword()
-    {
-        return $this->attributes['password'];
-    }
-
-    public function getRememberToken()
-    {
-        return $this->attributes['remember_token'] ?? null;
-    }
-
-    public function setRememberToken($value)
-    {
-        $this->attributes['remember_token'] = $value;
-    }
-
-    public function getRememberTokenName()
-    {
-        return 'remember_token';
-    }
-
-    public function getAuthPasswordName()
-    {
-        return 'password';
-    }
-}
-```
+Next, define your guard in config/auth.php.
 
 #### Define the Auth Guard
 In your config/auth.php, add the following to define your firebase guard:
@@ -320,17 +267,25 @@ In your config/auth.php, add the following to define your firebase guard:
 'guards' => [
     'firebase' => [
         'driver' => 'firebase',
-        'provider' => 'firebase',
+        'provider' => 'firebase_users',
+    ],
+    'api' => [
+        'driver' => 'sanctum',
+        'provider' => 'firebase_users',
     ],
 ],
     
 'providers' => [
-    'firebase' => [
+    'firebase_users' => [
         'driver' => 'firebase',
-        'model' => App\Models\Firebase\User::class,
+        'model' => Firebase\Auth\Models\User::class,
     ],
 ],
 ```
+
+### User Model
+
+You can use the User model like any other model, import the user model using: `Use Firebase\Auth\Models\User`
 
 ### Authentication Routes
 
@@ -365,6 +320,78 @@ To check if a user is authenticated:
 Route::get('check', function (Request $request) {
     return Auth::guard('firebase')->user();
 })->middleware('auth:firebase');
+```
+
+### Api Authentication
+
+For the api authentication is necesary install `Laravel Sanctum`
+
+#### Middleware
+
+Import the AuthenticateWithFirebaseTokens middleware in `bootstrap/app.php`
+
+```php
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Firebase\Auth\Middlewares\AuthenticateWithFirebaseTokens;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'auth.firebase' => AuthenticateWithFirebaseTokens::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();
+```
+
+#### Login Route
+
+```php
+Route::get('login/{usernamen}/{password}', function ($username, $password, Request $request) {
+    if(Auth::guard('firebase')->attempt(['username' => $username, 'password' => $password])){
+        $user = Auth::guard('firebase')->user();
+        $token = $user->createToken('api-token');
+
+        return response()->json([
+            'message' => 'Authenticated',
+            'token' => $token
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'Unauthorized',
+        'token' => null
+    ], 401);
+});
+```
+
+#### Logout Route
+
+```php
+Route::get('logout', function (Request $request) {
+    Auth::user()->revokeAllTokens();
+
+    return response()->json([
+        'message' => 'Logged out'
+    ]);
+})->middleware('auth.firebase');
+```
+
+#### Check Authentication
+
+```php
+Route::get('/user', function (Request $request) {
+    return Auth::user()->toArray();
+})->middleware('auth.firebase');
 ```
 
 ### License
