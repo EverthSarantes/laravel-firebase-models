@@ -41,5 +41,9 @@ class FirebaseServiceProvider extends ServiceProvider
         Auth::provider('firebase', function ($app, array $config) {
             return new FirebaseUserProvider();
         });
+
+        $this->publishes([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'migrations');
     }
 }
