@@ -291,6 +291,8 @@ You can use the User model like any other model, import the user model using: `U
 
 #### Login Route
 
+When creating a user, the password must be encrypted using the `bcrypt()` function; when sending it to the attempt method, it should be in plain text.
+
 ```php
 Route::get('login/{username}/{password}', function ($username, $password, Request $request) {
     if (Auth::guard('firebase')->attempt(['username' => $username, 'password' => $password])) {
@@ -324,7 +326,7 @@ Route::get('check', function (Request $request) {
 
 ### Api Authentication
 
-For the api authentication is necesary install `Laravel Sanctum`
+For the api authentication is necesary install `Laravel Sanctum`, Next, publish the migration files with `php artisan vendor:publish --tag=migrations` and run the migrations with `php artisan migrate`
 
 #### Middleware
 
