@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Firebase\Auth\Models\User;
 use Firebase\Auth\Providers\FirebaseUserProvider;
+use Illuminate\Support\Facades\Hash;
 
 class FirebaseGuard implements Guard
 {
@@ -32,11 +33,9 @@ class FirebaseGuard implements Guard
             return $this->user;
         }
 
-        // Recuperar el ID del usuario desde la sesión
         $userId = session()->get('firebase_user_id');
 
         if ($userId) {
-            // Buscar al usuario en Firebase usando el ID
             $this->user = User::find($userId);
         }
 
@@ -50,16 +49,14 @@ class FirebaseGuard implements Guard
 
     public function validate(array $credentials = [])
     {
-        $firebase_user = User::where('username', $credentials['username'])->first(); // Usa first para buscar el primer registro
+        $firebase_user = User::where('username', $credentials['username'])->first(); 
 
-        if (!$firebase_user || $firebase_user->password !== $credentials['password']) {
+        if (!$firebase_user || !Hash::check($credentials['password'], $firebase_user->password)) {
             return false;
         }
 
-        // Si la validación es exitosa, guardar el usuario autenticado
         $this->setUser($firebase_user);
 
-        // Guardar el ID del usuario en la sesión
         session()->put('firebase_user_id', $firebase_user->id);
 
         return true;
